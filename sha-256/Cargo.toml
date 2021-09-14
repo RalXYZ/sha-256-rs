@@ -7,3 +7,10 @@ edition = "2021"
 
 [dependencies]
 hex = "0.4"
+rand = "0.8.4"
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+opt-level = "s"

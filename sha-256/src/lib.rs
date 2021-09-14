@@ -19,7 +19,6 @@ const K: [u32; 64] = [
 pub trait Sha256 {
     fn do_hash(&self) -> [u8; 32];
     fn process_64_byte(input: [u8; 64], h: &mut [u32; 8]);
-    fn right_rotate(n: u32, d: u32) -> u32;
 }
 
 impl Sha256 for Vec<u8> {
@@ -86,11 +85,11 @@ impl Sha256 for Vec<u8> {
         // Extend the first 16 words into the remaining
         // 48 words w[16..64] of the message schedule array:
         for x in 16..64 {
-            let s0 = Self::right_rotate(w[x - 15], 7)
-                ^ Self::right_rotate(w[x - 15], 18)
+            let s0 = w[x - 15].rotate_right(7)
+                ^ w[x - 15].rotate_right(18)
                 ^ (w[x - 15] >> 3);
-            let s1 = Self::right_rotate(w[x - 2], 17)
-                ^ Self::right_rotate(w[x - 2], 19)
+            let s1 = w[x - 2].rotate_right(17)
+                ^ w[x - 2].rotate_right(19)
                 ^ (w[x - 2] >> 10);
             w[x] = w[x - 16]
                 .wrapping_add(s0)
@@ -104,16 +103,16 @@ impl Sha256 for Vec<u8> {
 
         // Compression function main loop:
         for y in 0..64 {
-            let s0 = Self::right_rotate(work_var[0], 2)
-                ^ Self::right_rotate(work_var[0], 13)
-                ^ Self::right_rotate(work_var[0], 22);
+            let s0 = work_var[0].rotate_right(2)
+                ^ work_var[0].rotate_right(13)
+                ^ work_var[0].rotate_right(22);
             let maj = (work_var[0] & work_var[1])
                 ^ (work_var[0] & work_var[2])
                 ^ (work_var[1] & work_var[2]);
             let temp2 = s0.wrapping_add(maj);
-            let s1 = Self::right_rotate(work_var[4], 6)
-                ^ Self::right_rotate(work_var[4], 11)
-                ^ Self::right_rotate(work_var[4], 25);
+            let s1 = work_var[4].rotate_right(6)
+                ^ work_var[4].rotate_right(11)
+                ^ work_var[4].rotate_right(25);
             let ch = (work_var[4] & work_var[5]) ^ ((!work_var[4]) & work_var[6]);
             let temp1 = work_var[7]
                 .wrapping_add(s1)
@@ -132,15 +131,12 @@ impl Sha256 for Vec<u8> {
             h[y] = h[y].wrapping_add(work_var[y]);
         }
     }
-
-    fn right_rotate(n: u32, d: u32) -> u32 {
-        (n >> d) | (n << (32 - d))
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::Sha256;
+    use std::time::Instant;
 
     #[test]
     fn short_sha_256() {
@@ -174,5 +170,18 @@ mod tests {
             hex::decode("ff3583336f59ddbfb6b202e15e9ed7fa05f3b6da8e159cd237af89fc02e5932e")
                 .unwrap()
         );
+    }
+
+    #[test]
+    fn rng_6_8_10() {
+        let start = Instant::now();
+        (0..65536)
+            .map(|_x| (0..32)
+                .map(|_|  rand::random::<u8>())
+                .collect::<Vec<u8>>()
+            )
+            .map(|x| x.do_hash())
+            .find(|x| x[0] & 0b1111_1100 == 0);
+        println!("find 6 consecutive prefix 0 cost: {:?} us", start.elapsed().as_micros());
     }
 }
