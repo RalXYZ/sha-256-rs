@@ -137,6 +137,30 @@ impl Sha256 for Vec<u8> {
 mod tests {
     use crate::Sha256;
     use std::time::Instant;
+    use rayon::prelude::*;
+    use core::ops::ControlFlow;
+
+    struct NumGen {
+        data: Vec<u8>
+    }
+
+
+    impl Iterator for NumGen {
+        type Item = Vec<u8>;
+
+        fn next(&mut self) -> Option<Vec<u8>> {
+            self.data.iter_mut().try_for_each(|x| {
+                *x = x.wrapping_add(1);
+                if *x != 0 {
+                    return ControlFlow::Break(());
+                }
+                ControlFlow::Continue(())
+            });
+
+            Some(self.data.clone())
+        }
+    }
+
 
     #[test]
     fn short_sha_256() {
@@ -173,15 +197,16 @@ mod tests {
     }
 
     #[test]
-    fn rng_6_8_10() {
+    fn test_consecutive_zeros() {
         let start = Instant::now();
-        (0..65536)
-            .map(|_x| (0..32)
-                .map(|_|  rand::random::<u8>())
-                .collect::<Vec<u8>>()
-            )
+        let iter = NumGen{data: vec![0; 32]};
+
+        let result = iter.par_bridge()
             .map(|x| x.do_hash())
-            .find(|x| x[0] & 0b1111_1100 == 0);
-        println!("find 6 consecutive prefix 0 cost: {:?} us", start.elapsed().as_micros());
+            .find_any(|x| x[0] == 0 && x[1] == 0 && x[2] == 0);
+        dbg!(result.unwrap());
+        dbg!(&iter.data.clone());
+        println!("find consecutive prefix 0 cost: {:?} us", start.elapsed().as_micros());
+
     }
 }
