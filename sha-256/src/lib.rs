@@ -201,12 +201,15 @@ mod tests {
         let start = Instant::now();
         let iter = NumGen{data: vec![0; 32]};
 
-        let result = iter.par_bridge()
+        let result = (0..).par_bridge()
+            .map(|_x| (0..32)
+                .map(|_|  rand::random::<u8>())
+                .collect::<Vec<u8>>()
+            )
             .map(|x| x.do_hash())
-            .find_any(|x| x[0] == 0 && x[1] == 0 && x[2] == 0);
+            .find_any(|x| x[0] == 0 && x[1] == 0 && x[2] == 0 && x[3] & 0b1111_1100 == 0);
         dbg!(result.unwrap());
         dbg!(&iter.data.clone());
         println!("find consecutive prefix 0 cost: {:?} us", start.elapsed().as_micros());
-
     }
 }

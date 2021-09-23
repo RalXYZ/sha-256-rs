@@ -154,9 +154,8 @@ for y in 0..8 {
 
 Here is a table, which contains the time elapse of finding $x$ consecutive prefix zeros.  
 
-| consecutive prefix zeros | test 1         | test 2         | test 3       | test 4         | average        |
-| ------------------------ | -------------- | -------------- | ------------ | -------------- | -------------- |
-| 6                        | $929 \mu s$    | $1086 \mu s$   | $852 \mu s$  | $663 \mu s$    | $883 \mu s$    |
-| 8                        | $3336 \mu s$   | $3476 \mu s$   | $3893 \mu s$ | $4760 \mu s$   | $3866 \mu s$   |
-| 10                       | $22,226 \mu s$ | $30,303 \mu s$ | $8878 \mu s$ | $54,949 \mu s$ | $27,704 \mu s$ |
-
+| consecutive prefix zeros | time elapsed |
+| ------------------------ | -------------- |
+| 30                        | $38 \text{ min}$ |
+| 31                        |  $52\text{ min}$  |
+| 32                       | Does Not Finish    |
